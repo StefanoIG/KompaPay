@@ -23,7 +23,7 @@ Route::post('/users/find', [UsuarioController::class, 'findByPublicId']);
 // Rutas protegidas (requieren autenticación)
 Route::middleware('auth:sanctum')->group(function () {
     // Rutas de usuario
-    Route::get('/user/me', [UsuarioController::class, 'me']);
+    Route::get('/user', [UsuarioController::class, 'me']);
     Route::put('/user/update', [UsuarioController::class, 'update']);
     Route::post('/user/logout', [UsuarioController::class, 'logout']);
     
