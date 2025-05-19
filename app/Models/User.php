@@ -9,9 +9,7 @@ use Laravel\Sanctum\HasApiTokens; // Esta es la importación que faltaba
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Grupo;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasUuids;

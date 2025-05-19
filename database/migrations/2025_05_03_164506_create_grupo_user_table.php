@@ -6,29 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('grupo_user', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->uuid('grupo_id');
-            $table->uuid('user_id');
-            $table->timestamps();
+/**
+* Run the migrations.
+*/
+public function up(): void
+{
+Schema::create('grupo_user', function (Blueprint $table) {
+// $table->uuid('id')->primary(); // Elimina esta línea
 
-            $table->foreign('grupo_id')->references('id')->on('grupos')->onDelete('cascade');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            
-            $table->unique(['grupo_id', 'user_id']);
-        });
-    }
+        $table->uuid('grupo_id');
+        $table->uuid('user_id');
+        $table->timestamps();
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('grupo_user');
-    }
+        $table->foreign('grupo_id')->references('id')->on('grupos')->onDelete('cascade');
+        $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+        // Añade una clave primaria compuesta
+        $table->primary(['grupo_id', 'user_id']); 
+    });
+}
+
+/**
+ * Reverse the migrations.
+ */
+public function down(): void
+{
+    Schema::dropIfExists('grupo_user');
+}
 };

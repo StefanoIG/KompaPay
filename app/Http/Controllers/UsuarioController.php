@@ -45,14 +45,11 @@ class UsuarioController extends Controller
             'ultima_sync' => Carbon::now(),
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
         return response()->json([
             'success' => true,
             'message' => 'Usuario registrado exitosamente',
             'data' => [
-                'user' => $user,
-                'token' => $token
+                'user' => $user
             ]
         ], 201);
     }
