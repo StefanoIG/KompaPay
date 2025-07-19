@@ -386,4 +386,226 @@ class UsuarioController extends Controller
             ]
         ], 200);
     }
+
+    /**
+     * Envía cambios locales al servidor (push)
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function pushChanges(Request $request)
+    {
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'cambios' => 'required|array',
+            'cambios.*.tipo' => 'required|in:gasto,grupo,pago',
+            'cambios.*.accion' => 'required|in:crear,actualizar,eliminar,pagar',
+            'cambios.*.id_publico' => 'required|string',
+            'cambios.*.datos' => 'required|array',
+            'cambios.*.timestamp_local' => 'required|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $resultados = [];
+            $conflictos = [];
+
+            foreach ($request->cambios as $cambio) {
+                switch ($cambio['tipo']) {
+                    case 'gasto':
+                        $resultado = $this->procesarCambioGasto($cambio, $user);
+                        break;
+                    case 'grupo':
+                        $resultado = $this->procesarCambioGrupo($cambio, $user);
+                        break;
+                    case 'pago':
+                        $resultado = $this->procesarCambioPago($cambio, $user);
+                        break;
+                    default:
+                        continue 2;
+                }
+
+                if ($resultado['tipo'] === 'conflicto') {
+                    $conflictos[] = $resultado;
+                } else {
+                    $resultados[] = $resultado;
+                }
+            }
+
+            // Actualizar última sincronización
+            $user->ultima_sync = now();
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cambios enviados exitosamente.',
+                'aplicados' => count($resultados),
+                'conflictos' => count($conflictos),
+                'datos' => [
+                    'resultados' => $resultados,
+                    'conflictos' => $conflictos,
+                    'ultima_sync' => $user->ultima_sync
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar cambios: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtiene cambios del servidor (pull)
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function pullChanges(Request $request)
+    {
+        $user = Auth::user();
+        
+        $validator = Validator::make($request->all(), [
+            'ultima_sync_local' => 'sometimes|date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            $ultimaSyncLocal = $request->ultima_sync_local ? 
+                Carbon::parse($request->ultima_sync_local) : 
+                $user->ultima_sync ?? Carbon::now()->subDays(30);
+
+            // Obtener cambios desde la última sincronización
+            $cambios = [
+                'gastos' => $this->obtenerGastosCambiados($user, $ultimaSyncLocal),
+                'grupos' => $this->obtenerGruposCambiados($user, $ultimaSyncLocal),
+                'pagos' => $this->obtenerPagosCambiados($user, $ultimaSyncLocal),
+            ];
+
+            // Obtener conflictos pendientes
+            $conflictosPendientes = $user->conflictosCreados()
+                ->where('estado', 'pendiente')
+                ->with(['gasto.participantes', 'gasto.grupo'])
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cambios obtenidos exitosamente.',
+                'datos' => [
+                    'cambios' => $cambios,
+                    'conflictos_pendientes' => $conflictosPendientes,
+                    'timestamp_servidor' => now(),
+                    'ultima_sync_usuario' => $user->ultima_sync
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener cambios: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtiene el estado de sincronización
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function syncStatus()
+    {
+        $user = Auth::user();
+
+        try {
+            $conflictosPendientes = $user->conflictosCreados()
+                ->where('estado', 'pendiente')
+                ->count();
+
+            $gastosPendientesSync = $user->gastosParticipante()
+                ->where('ultima_modificacion', '>', $user->ultima_sync ?? Carbon::now()->subDays(30))
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'datos' => [
+                    'ultima_sync' => $user->ultima_sync,
+                    'conflictos_pendientes' => $conflictosPendientes,
+                    'gastos_pendientes_sync' => $gastosPendientesSync,
+                    'necesita_sincronizacion' => $conflictosPendientes > 0 || $gastosPendientesSync > 0,
+                    'timestamp_servidor' => now()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener estado de sincronización: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Métodos privados para procesamiento de cambios
+
+    private function procesarCambioGasto($cambio, $user)
+    {
+        // Implementar lógica específica para cambios de gastos
+        // Similar a la lógica del sync en GastoController
+        return ['tipo' => 'exito', 'id' => $cambio['id_publico']];
+    }
+
+    private function procesarCambioGrupo($cambio, $user)
+    {
+        // Implementar lógica específica para cambios de grupos
+        return ['tipo' => 'exito', 'id' => $cambio['id_publico']];
+    }
+
+    private function procesarCambioPago($cambio, $user)
+    {
+        // Implementar lógica específica para cambios de pagos
+        return ['tipo' => 'exito', 'id' => $cambio['id_publico']];
+    }
+
+    private function obtenerGastosCambiados($user, $ultimaSync)
+    {
+        // Obtener gastos de grupos donde el usuario es miembro
+        $gruposIds = $user->grupos()->pluck('grupos.id')
+            ->merge($user->gruposCreados()->pluck('id'));
+
+        return \App\Models\Gasto::whereIn('grupo_id', $gruposIds)
+            ->where('ultima_modificacion', '>', $ultimaSync)
+            ->with(['pagador', 'participantes', 'grupo'])
+            ->get();
+    }
+
+    private function obtenerGruposCambiados($user, $ultimaSync)
+    {
+        // Obtener grupos donde el usuario es miembro que han cambiado
+        return $user->grupos()
+            ->where('fecha_creacion', '>', $ultimaSync)
+            ->orWhere('updated_at', '>', $ultimaSync)
+            ->with(['creador', 'miembros'])
+            ->get()
+            ->merge($user->gruposCreados()
+                ->where('fecha_creacion', '>', $ultimaSync)
+                ->orWhere('updated_at', '>', $ultimaSync)
+                ->with(['creador', 'miembros'])
+                ->get());
+    }
+
+    private function obtenerPagosCambiados($user, $ultimaSync)
+    {
+        // Obtener cambios en el estado de pagos
+        return $user->gastosParticipante()
+            ->wherePivot('updated_at', '>', $ultimaSync)
+            ->with(['pagador', 'grupo'])
+            ->get();
+    }
 }

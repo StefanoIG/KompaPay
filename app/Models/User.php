@@ -5,11 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; // Esta es la importación que faltaba
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Grupo;
+use App\Models\Gasto;
+use App\Models\SyncConflicto;
+use App\Models\AuditLog;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable, HasUuids;
@@ -78,7 +81,8 @@ class User extends Authenticatable
     public function gastosParticipante(): BelongsToMany
     {
         return $this->belongsToMany(Gasto::class, 'gasto_user')
-            ->withPivot('monto_proporcional');
+            ->withPivot('monto_proporcional', 'pagado', 'fecha_pago')
+            ->withTimestamps();
     }
 
     /**
@@ -87,6 +91,14 @@ class User extends Authenticatable
     public function conflictosCreados(): HasMany
     {
         return $this->hasMany(SyncConflicto::class, 'creado_por');
+    }
+
+    /**
+     * Get the conflicts resolved by the user.
+     */
+    public function conflictosResueltos(): HasMany
+    {
+        return $this->hasMany(SyncConflicto::class, 'resuelto_por');
     }
 
     /**

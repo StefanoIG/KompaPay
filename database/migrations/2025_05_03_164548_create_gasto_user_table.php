@@ -16,6 +16,8 @@ return new class extends Migration
             $table->uuid('gasto_id');
             $table->uuid('user_id');
             $table->decimal('monto_proporcional', 10, 2);
+            $table->boolean('pagado')->default(false);
+            $table->timestamp('fecha_pago')->nullable();
             $table->timestamps();
 
             $table->foreign('gasto_id')->references('id')->on('gastos')->onDelete('cascade');

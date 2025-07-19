@@ -25,11 +25,14 @@ class Gasto extends Model
     protected $fillable = [
         'grupo_id',
         'descripcion',
-        'monto_total',
+        'monto',
+        'tipo_division',
         'pagado_por',
-        'estado_pago',
-        'ultima_modificacion',
         'modificado_por',
+        'id_publico',
+        'nota',
+        'fecha_creacion',
+        'ultima_modificacion',
     ];
 
     /**
@@ -38,7 +41,8 @@ class Gasto extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'monto_total' => 'decimal:2',
+        'monto' => 'decimal:2',
+        'fecha_creacion' => 'datetime',
         'ultima_modificacion' => 'datetime',
     ];
 

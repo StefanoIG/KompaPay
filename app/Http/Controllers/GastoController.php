@@ -118,9 +118,9 @@ class GastoController extends Controller
         $gasto->id = $gastoId;
         $gasto->grupo_id = $request->grupo_id;
         $gasto->descripcion = $request->descripcion;
-        $gasto->monto_total = $request->monto_total;
+        $gasto->monto = $request->monto_total;
         $gasto->pagado_por = $request->pagado_por;
-        $gasto->estado_pago = $request->input('estado_pago', 'pendiente');
+        //$gasto->estado_pago = $request->input('estado_pago', 'pendiente');
         $gasto->ultima_modificacion = Carbon::parse($request->ultima_modificacion);
         $gasto->modificado_por = $request->modificado_por;
         $gasto->save();
@@ -517,5 +517,178 @@ class GastoController extends Controller
             'errores_sincronizacion' => $errores,
             'timestamp_sync_servidor' => $user->ultima_sync
         ]);
+    }
+
+    /**
+     * Marca un gasto como pagado por el usuario autenticado.
+     *
+     * @param  string  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function marcarPagado($id)
+    {
+        $user = Auth::user();
+        $gasto = Gasto::with(['grupo.miembros', 'participantes'])->find($id);
+
+        if (!$gasto) {
+            return response()->json(['success' => false, 'message' => 'Gasto no encontrado.'], 404);
+        }
+
+        // Verificar que el usuario es participante del gasto
+        $participante = $gasto->participantes->where('id', $user->id)->first();
+        if (!$participante) {
+            return response()->json(['success' => false, 'message' => 'No eres participante de este gasto.'], 403);
+        }
+
+        try {
+            // Verificar si ya está marcado como pagado
+            if ($participante->pivot->pagado) {
+                return response()->json(['success' => false, 'message' => 'Ya has marcado tu parte como pagada.'], 409);
+            }
+
+            // Marcar como pagado
+            $gasto->participantes()->updateExistingPivot($user->id, [
+                'pagado' => true,
+                'fecha_pago' => now(),
+            ]);
+
+            // Registrar en audit log
+            AuditLog::create([
+                'gasto_id' => $gasto->id,
+                'accion' => 'marcado_pagado',
+                'hecho_por' => $user->id,
+                'datos_anteriores' => json_encode(['pagado' => false]),
+                'datos_nuevos' => json_encode(['pagado' => true, 'fecha_pago' => now()]),
+                'timestamp' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Gasto marcado como pagado exitosamente.',
+                'data' => $gasto->fresh()->load(['pagador', 'participantes'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al marcar el gasto como pagado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Resuelve un conflicto de sincronización.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function resolverConflicto(Request $request, $id)
+    {
+        $user = Auth::user();
+        $gasto = Gasto::with(['grupo'])->find($id);
+
+        if (!$gasto) {
+            return response()->json(['success' => false, 'message' => 'Gasto no encontrado.'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'resolucion' => 'required|in:aceptar_local,aceptar_remoto,mantener_actual',
+            'datos_resolucion' => 'sometimes|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            // Buscar el conflicto relacionado a este gasto
+            $conflicto = SyncConflicto::where('gasto_id', $gasto->id)
+                ->where('estado', 'pendiente')
+                ->first();
+
+            if (!$conflicto) {
+                return response()->json(['success' => false, 'message' => 'No se encontró conflicto pendiente para este gasto.'], 404);
+            }
+
+            // Verificar autorización para resolver conflicto
+            $grupo = $gasto->grupo;
+            if ($grupo->creado_por !== $user->id && $conflicto->creado_por !== $user->id) {
+                return response()->json(['success' => false, 'message' => 'No autorizado para resolver este conflicto.'], 403);
+            }
+
+            // Aplicar resolución
+            switch ($request->resolucion) {
+                case 'aceptar_local':
+                    // Mantener datos actuales del servidor, marcar conflicto como resuelto
+                    $conflicto->estado = 'resuelto';
+                    $conflicto->resuelto_por = $user->id;
+                    $conflicto->fecha_resolucion = now();
+                    $conflicto->save();
+                    break;
+
+                case 'aceptar_remoto':
+                    // Aplicar datos del cliente (guardados en datos_cliente del conflicto)
+                    $datosCliente = json_decode($conflicto->datos_cliente, true);
+                    
+                    if ($datosCliente) {
+                        // Actualizar gasto con datos del cliente
+                        $gasto->descripcion = $datosCliente['descripcion'] ?? $gasto->descripcion;
+                        $gasto->monto = $datosCliente['monto'] ?? $gasto->monto;
+                        $gasto->tipo_division = $datosCliente['tipo_division'] ?? $gasto->tipo_division;
+                        $gasto->nota = $datosCliente['nota'] ?? $gasto->nota;
+                        $gasto->modificado_por = $user->id;
+                        $gasto->ultima_modificacion = now();
+                        $gasto->save();
+
+                        // Actualizar participantes si están en los datos
+                        if (isset($datosCliente['participantes'])) {
+                            $gasto->participantes()->detach();
+                            foreach ($datosCliente['participantes'] as $participante) {
+                                $gasto->participantes()->attach($participante['user_id'], [
+                                    'monto_proporcional' => $participante['monto_proporcional'],
+                                    'pagado' => $participante['pagado'] ?? false,
+                                ]);
+                            }
+                        }
+                    }
+
+                    $conflicto->estado = 'resuelto';
+                    $conflicto->resuelto_por = $user->id;
+                    $conflicto->fecha_resolucion = now();
+                    $conflicto->save();
+                    break;
+
+                case 'mantener_actual':
+                    // Solo marcar como resuelto sin cambios
+                    $conflicto->estado = 'resuelto';
+                    $conflicto->resuelto_por = $user->id;
+                    $conflicto->fecha_resolucion = now();
+                    $conflicto->save();
+                    break;
+            }
+
+            // Registrar en audit log
+            AuditLog::create([
+                'gasto_id' => $gasto->id,
+                'accion' => 'conflicto_resuelto',
+                'hecho_por' => $user->id,
+                'datos_anteriores' => json_encode(['resolucion' => $request->resolucion]),
+                'datos_nuevos' => json_encode(['conflicto_id' => $conflicto->id]),
+                'timestamp' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Conflicto resuelto exitosamente.',
+                'data' => $gasto->fresh()->load(['pagador', 'participantes', 'grupo'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al resolver el conflicto: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

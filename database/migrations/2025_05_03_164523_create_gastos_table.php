@@ -15,11 +15,14 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('grupo_id');
             $table->string('descripcion');
-            $table->decimal('monto_total', 10, 2);
+            $table->decimal('monto', 10, 2); // Cambié de monto_total a monto
+            $table->enum('tipo_division', ['equitativa', 'porcentaje', 'personalizada'])->default('equitativa');
             $table->uuid('pagado_por');
-            $table->enum('estado_pago', ['pendiente', 'pagado'])->default('pendiente');
-            $table->timestamp('ultima_modificacion');
             $table->uuid('modificado_por')->nullable();
+            $table->string('id_publico')->unique();
+            $table->text('nota')->nullable();
+            $table->timestamp('fecha_creacion');
+            $table->timestamp('ultima_modificacion');
             $table->timestamps();
 
             $table->foreign('grupo_id')->references('id')->on('grupos')->onDelete('cascade');

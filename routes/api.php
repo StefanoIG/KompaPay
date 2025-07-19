@@ -37,7 +37,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/grupos/{id}', [GrupoController::class, 'show'])->name('grupos.show');
     Route::put('/grupos/{id}', [GrupoController::class, 'update'])->name('grupos.update');
     Route::delete('/grupos/{id}', [GrupoController::class, 'destroy'])->name('grupos.destroy');
+    
+    // Rutas para invitaciones y gestión de miembros
     Route::post('/grupos/join', [GrupoController::class, 'joinWithPublicId'])->name('grupos.join');
+    Route::post('/grupos/{grupoId}/invitar', [GrupoController::class, 'invitarMiembro'])->name('grupos.invitar');
     Route::post('/grupos/{grupoId}/members', [GrupoController::class, 'addMember'])->name('grupos.members.add');
     Route::delete('/grupos/{grupoId}/members/{usuarioId}', [GrupoController::class, 'removeMember'])->name('grupos.members.remove');
 
@@ -46,8 +49,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/gastos', [GastoController::class, 'store'])->name('gastos.store');
     Route::get('/gastos/{id}', [GastoController::class, 'show'])->name('gastos.show');
     Route::put('/gastos/{id}', [GastoController::class, 'update'])->name('gastos.update'); // PUT para actualizaciones completas o parciales
-    // PATCH también es una opción para actualizaciones parciales: Route::patch('/gastos/{id}', [GastoController::class, 'update']);
     Route::delete('/gastos/{id}', [GastoController::class, 'destroy'])->name('gastos.destroy');
+    
+    // Rutas específicas para pagos y resolución de conflictos
+    Route::post('/gastos/{id}/pagar', [GastoController::class, 'marcarPagado'])->name('gastos.pagar');
+    Route::post('/gastos/{id}/resolver', [GastoController::class, 'resolverConflicto'])->name('gastos.resolver');
+    
+    // Rutas de sincronización
     Route::post('/gastos/sync', [GastoController::class, 'sync'])->name('gastos.sync'); // Endpoint para sincronización masiva de gastos
 
     // Rutas de SyncConflictos
@@ -57,4 +65,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rutas de AuditLog
     Route::get('/gastos/{gastoId}/history', [AuditLogController::class, 'index'])->name('auditlog.gasto.index');
+    
+    // Rutas de sincronización global
+    Route::post('/sync/push', [UsuarioController::class, 'pushChanges'])->name('sync.push');
+    Route::post('/sync/pull', [UsuarioController::class, 'pullChanges'])->name('sync.pull');
+    Route::get('/sync/status', [UsuarioController::class, 'syncStatus'])->name('sync.status');
 });

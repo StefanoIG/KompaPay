@@ -14,18 +14,20 @@ return new class extends Migration
         Schema::create('sync_conflictos', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('gasto_id');
-            $table->json('version_a');
-            $table->json('version_b');
+            $table->string('tipo_conflicto'); // diferencias_datos, concurrencia, conflicto_pago
             $table->uuid('creado_por');
-            $table->boolean('resuelto')->default(false);
-            $table->boolean('aprobado_por_creador')->default(true);
-            $table->boolean('aprobado_por_otro')->default(false);
-            $table->timestamp('fecha_conflicto');
-            $table->timestamp('resuelto_el')->nullable();
+            $table->json('datos_servidor');
+            $table->json('datos_cliente');
+            $table->enum('estado', ['pendiente', 'resuelto', 'auto_resuelto', 'error'])->default('pendiente');
+            $table->uuid('resuelto_por')->nullable();
+            $table->timestamp('fecha_creacion');
+            $table->timestamp('fecha_resolucion')->nullable();
+            $table->json('datos_resolucion')->nullable();
             $table->timestamps();
 
             $table->foreign('gasto_id')->references('id')->on('gastos')->onDelete('cascade');
             $table->foreign('creado_por')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('resuelto_por')->references('id')->on('users')->onDelete('set null');
         });
     }
 

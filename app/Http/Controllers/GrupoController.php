@@ -48,30 +48,48 @@ class GrupoController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
             'miembros_ids' => 'sometimes|array', // IDs de usuarios para añadir como miembros iniciales
-            'miembros_ids.*' => 'uuid|exists:users,id',
+            'miembros_ids.*' => 'exists:users,id'
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => 'Datos del grupo inválidos.', 'errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        $grupo = Grupo::create([
-            'nombre' => $request->nombre,
-            'creado_por' => $user->id,
-            'id_publico' => (string) Str::uuid(), // ID público para unirse con código
-            'fecha_creacion' => Carbon::now(),
-        ]);
+        try {
+            // Crear el grupo
+            $grupo = Grupo::create([
+                'nombre' => $request->nombre,
+                'creado_por' => $user->id,
+                'id_publico' => Str::uuid(),
+                'fecha_creacion' => now(),
+            ]);
 
-        // El creador siempre es miembro
-        $miembrosAAnadir = [$user->id];
+            // Agregar miembros iniciales si se proporcionaron
+            if ($request->has('miembros_ids')) {
+                $grupo->miembros()->attach($request->miembros_ids);
+            }
 
-        if ($request->has('miembros_ids')) {
-            $miembrosAAnadir = array_unique(array_merge($miembrosAAnadir, $request->miembros_ids));
+            // Agregar el creador como miembro automáticamente
+            $grupo->miembros()->syncWithoutDetaching([$user->id]);
+
+            // Cargar relaciones para respuesta
+            $grupo->load(['creador', 'miembros']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Grupo creado exitosamente',
+                'data' => $grupo
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el grupo: ' . $e->getMessage()
+            ], 500);
         }
-
-        $grupo->miembros()->sync($miembrosAAnadir);
-
-        return response()->json(['success' => true, 'message' => 'Grupo creado exitosamente.', 'data' => $grupo->load(['creador', 'miembros'])], 201);
     }
 
     /**
@@ -289,5 +307,70 @@ class GrupoController extends Controller
         $grupo->miembros()->attach($user->id);
 
         return response()->json(['success' => true, 'message' => 'Te has unido al grupo exitosamente.', 'data' => $grupo->load(['creador', 'miembros'])]);
+    }
+
+    /**
+     * Invita a un miembro al grupo por email o ID público de usuario.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  string  $grupoId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function invitarMiembro(Request $request, $grupoId)
+    {
+        $user = Auth::user();
+        $grupo = Grupo::find($grupoId);
+
+        if (!$grupo) {
+            return response()->json(['success' => false, 'message' => 'Grupo no encontrado.'], 404);
+        }
+
+        // Solo miembros del grupo pueden invitar
+        if ($grupo->creado_por !== $user->id && !$grupo->miembros->contains($user->id)) {
+            return response()->json(['success' => false, 'message' => 'No autorizado para invitar miembros a este grupo.'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required_without:id_publico_usuario|email',
+            'id_publico_usuario' => 'required_without:email|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        try {
+            // Buscar usuario por email o ID público
+            $usuarioInvitado = null;
+            if ($request->has('email')) {
+                $usuarioInvitado = User::where('email', $request->email)->first();
+            } elseif ($request->has('id_publico_usuario')) {
+                $usuarioInvitado = User::where('id_publico', $request->id_publico_usuario)->first();
+            }
+
+            if (!$usuarioInvitado) {
+                return response()->json(['success' => false, 'message' => 'Usuario no encontrado.'], 404);
+            }
+
+            // Verificar si ya es miembro
+            if ($grupo->miembros->contains($usuarioInvitado->id) || $grupo->creado_por === $usuarioInvitado->id) {
+                return response()->json(['success' => false, 'message' => 'El usuario ya es miembro del grupo.'], 409);
+            }
+
+            // Agregar como miembro
+            $grupo->miembros()->attach($usuarioInvitado->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario invitado exitosamente al grupo.',
+                'data' => $grupo->load(['creador', 'miembros'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al invitar usuario: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
