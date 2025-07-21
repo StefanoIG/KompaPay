@@ -59,6 +59,7 @@ class GastoController extends Controller
             'descripcion' => 'required|string|max:255',
             'monto_total' => 'required|numeric|min:0.01',
             'pagado_por' => 'required|uuid|exists:users,id',
+            'id_publico' => 'required|string|max:255',
             'participantes' => 'required|array',
             'participantes.*.id_usuario' => 'required|uuid|exists:users,id',
             'participantes.*.monto_proporcional' => 'required|numeric|min:0.01',
@@ -119,8 +120,10 @@ class GastoController extends Controller
         $gasto->grupo_id = $request->grupo_id;
         $gasto->descripcion = $request->descripcion;
         $gasto->monto = $request->monto_total;
+        $gasto->tipo_division = $request->input('tipo_division', 'equitativa');
         $gasto->pagado_por = $request->pagado_por;
-        //$gasto->estado_pago = $request->input('estado_pago', 'pendiente');
+        $gasto->id_publico = $request->id_publico;
+        $gasto->fecha_creacion = Carbon::parse($request->ultima_modificacion);
         $gasto->ultima_modificacion = Carbon::parse($request->ultima_modificacion);
         $gasto->modificado_por = $request->modificado_por;
         $gasto->save();
@@ -128,7 +131,10 @@ class GastoController extends Controller
         // Guardar participantes
         $participantesData = [];
         foreach ($request->participantes as $participante) {
-            $participantesData[$participante['id_usuario']] = ['monto_proporcional' => $participante['monto_proporcional']];
+            $participantesData[$participante['id_usuario']] = [
+                'id' => (string) Str::uuid(),
+                'monto_proporcional' => $participante['monto_proporcional']
+            ];
         }
         $gasto->participantes()->sync($participantesData);
 
@@ -266,7 +272,7 @@ class GastoController extends Controller
         $datosOriginales = $gasto->load('participantes')->toJson();
 
         if ($request->has('descripcion')) $gasto->descripcion = $request->descripcion;
-        if ($request->has('monto_total')) $gasto->monto_total = $request->monto_total;
+        if ($request->has('monto_total')) $gasto->monto = $request->monto_total;
         if ($request->has('pagado_por')) {
             if (!$grupo->miembros->contains($request->pagado_por) && $grupo->creado_por !== $request->pagado_por) {
                  return response()->json(['success' => false, 'message' => 'El nuevo usuario que pagó no es miembro del grupo.'], 422);
@@ -284,7 +290,7 @@ class GastoController extends Controller
             $sumaParticipantes = array_reduce($request->participantes, function ($carry, $item) {
                 return $carry + $item['monto_proporcional'];
             }, 0);
-            $montoTotalActual = $request->has('monto_total') ? $request->monto_total : $gasto->monto_total;
+            $montoTotalActual = $request->has('monto_total') ? $request->monto_total : $gasto->monto;
 
             if (abs($sumaParticipantes - $montoTotalActual) > 0.001) {
                 return response()->json(['success' => false, 'message' => 'La suma de los montos proporcionales de los participantes no coincide con el monto total del gasto.'], 422);
@@ -298,7 +304,10 @@ class GastoController extends Controller
 
             $participantesData = [];
             foreach ($request->participantes as $participante) {
-                $participantesData[$participante['id_usuario']] = ['monto_proporcional' => $participante['monto_proporcional']];
+                $participantesData[$participante['id_usuario']] = [
+                    'id' => (string) Str::uuid(),
+                    'monto_proporcional' => $participante['monto_proporcional']
+                ];
             }
             $gasto->participantes()->sync($participantesData);
         }
@@ -329,7 +338,7 @@ class GastoController extends Controller
         if (isset($requestData['descripcion']) && $gasto->descripcion !== $requestData['descripcion']) {
             return true;
         }
-        if (isset($requestData['monto_total']) && (float)$gasto->monto_total !== (float)$requestData['monto_total']) {
+        if (isset($requestData['monto_total']) && (float)$gasto->monto !== (float)$requestData['monto_total']) {
             return true;
         }
         if (isset($requestData['pagado_por']) && $gasto->pagado_por !== $requestData['pagado_por']) {
@@ -646,6 +655,7 @@ class GastoController extends Controller
                             $gasto->participantes()->detach();
                             foreach ($datosCliente['participantes'] as $participante) {
                                 $gasto->participantes()->attach($participante['user_id'], [
+                                    'id' => (string) Str::uuid(),
                                     'monto_proporcional' => $participante['monto_proporcional'],
                                     'pagado' => $participante['pagado'] ?? false,
                                 ]);

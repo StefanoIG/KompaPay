@@ -327,6 +327,71 @@ class UsuarioController extends Controller
     }
 
     /**
+     * Obtener deudas pendientes del usuario
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function myDebts(Request $request)
+    {
+        $user = $request->user();
+        
+        // Deudas donde el usuario debe dinero (participante no pagado)
+        $deudas = $user->gastosParticipante()
+            ->wherePivot('pagado', false)
+            ->with(['pagador', 'grupo', 'participantes'])
+            ->get()
+            ->map(function ($gasto) use ($user) {
+                $pivot = $gasto->participantes->where('id', $user->id)->first()->pivot;
+                return [
+                    'gasto_id' => $gasto->id,
+                    'gasto_id_publico' => $gasto->id_publico,
+                    'descripcion' => $gasto->descripcion,
+                    'monto_total' => $gasto->monto,
+                    'monto_adeudado' => $pivot->monto_proporcional,
+                    'pagado_por' => $gasto->pagador->nombre,
+                    'grupo' => $gasto->grupo->nombre,
+                    'fecha_creacion' => $gasto->fecha_creacion,
+                ];
+            });
+        
+        // Deudas donde le deben dinero al usuario (gastos pagados por él con participantes no pagados)
+        $acreencias = $user->gastosPagados()
+            ->whereHas('participantes', function ($query) {
+                $query->wherePivot('pagado', false);
+            })
+            ->with(['grupo', 'participantes'])
+            ->get()
+            ->map(function ($gasto) use ($user) {
+                $participantesNoPagados = $gasto->participantes->where('pivot.pagado', false);
+                $montoAdeudado = $participantesNoPagados->sum('pivot.monto_proporcional');
+                return [
+                    'gasto_id' => $gasto->id,
+                    'gasto_id_publico' => $gasto->id_publico,
+                    'descripcion' => $gasto->descripcion,
+                    'monto_total' => $gasto->monto,
+                    'monto_adeudado' => $montoAdeudado,
+                    'deudores' => $participantesNoPagados->pluck('nombre'),
+                    'grupo' => $gasto->grupo->nombre,
+                    'fecha_creacion' => $gasto->fecha_creacion,
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'deudas' => $deudas,
+                'acreencias' => $acreencias,
+                'resumen' => [
+                    'total_deudas' => $deudas->sum('monto_adeudado'),
+                    'total_acreencias' => $acreencias->sum('monto_adeudado'),
+                    'balance' => $acreencias->sum('monto_adeudado') - $deudas->sum('monto_adeudado')
+                ]
+            ]
+        ], 200);
+    }
+
+    /**
      * Obtener conflictos pendientes del usuario
      * 
      * @param Request $request

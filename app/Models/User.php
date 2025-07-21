@@ -81,7 +81,7 @@ class User extends Authenticatable
     public function gastosParticipante(): BelongsToMany
     {
         return $this->belongsToMany(Gasto::class, 'gasto_user')
-            ->withPivot('monto_proporcional', 'pagado', 'fecha_pago')
+            ->withPivot('id', 'monto_proporcional', 'pagado', 'fecha_pago')
             ->withTimestamps();
     }
 

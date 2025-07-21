@@ -76,7 +76,8 @@ class Gasto extends Model
     public function participantes(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'gasto_user')
-            ->withPivot('monto_proporcional');
+            ->withPivot('id', 'monto_proporcional', 'pagado', 'fecha_pago')
+            ->withTimestamps();
     }
 
     /**

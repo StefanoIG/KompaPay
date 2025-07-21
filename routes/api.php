@@ -7,6 +7,7 @@ use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\SyncConflictoController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\ReporteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rutas para obtener datos relacionados al usuario (ya las tienes)
     Route::get('/user/groups', [UsuarioController::class, 'myGroups']); // Reemplazado por GrupoController@index
     Route::get('/user/expenses', [UsuarioController::class, 'myExpenses']); // Se puede obtener de GastoController o mantener si la lógica es distinta
+    Route::get('/user/gastos', [UsuarioController::class, 'myExpenses']); // Ruta específica para gastos del usuario
+    Route::get('/user/deudas', [UsuarioController::class, 'myDebts']); // Ruta específica para deudas del usuario
     Route::get('/user/conflicts', [UsuarioController::class, 'myConflicts']); // Reemplazado por SyncConflictoController@index
 
     // Rutas de Grupos
@@ -70,4 +73,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sync/push', [UsuarioController::class, 'pushChanges'])->name('sync.push');
     Route::post('/sync/pull', [UsuarioController::class, 'pullChanges'])->name('sync.pull');
     Route::get('/sync/status', [UsuarioController::class, 'syncStatus'])->name('sync.status');
+    
+    // Rutas de Reportes
+    Route::get('/reportes/balance/pdf', [ReporteController::class, 'balancePdf'])->name('reportes.balance.pdf');
+    Route::get('/reportes/balance/resumen', [ReporteController::class, 'resumenBalance'])->name('reportes.balance.resumen');
 });
