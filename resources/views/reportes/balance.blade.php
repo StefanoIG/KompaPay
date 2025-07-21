@@ -9,238 +9,307 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
         }
         
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 11px;
-            line-height: 1.6;
-            color: #374151;
-            background: #f3f4f6;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #2d3748;
+            background: #ffffff;
         }
 
         .page {
-            width: 210mm;
+            width: 100%;
+            max-width: 210mm;
             min-height: 297mm;
             background: white;
-            margin: 0 auto;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        /* --- ENCABEZADO MEJORADO --- */
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2b77c7 50%, #4299e1 100%);
+            color: black;
+            padding: 20px;
             position: relative;
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 120px;
         }
 
-        .content {
-            padding: 25px 30px;
-            flex-grow: 1;
-        }
-
-        /* --- Encabezado (CSS CORREGIDO) --- */
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white !important;
-            padding: 25px 30px;
-            position: relative;
-            overflow: auto; /* Contiene los floats */
-        }
-
-        .header * {
-            color: white !important;
+        .header-content {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            justify-content: space-between;
         }
 
         .header-left {
-            float: left;
-            width: 80%; /* Ancho para el texto, dejando espacio al logo */
-        }
-        
-        .header-logo {
-            float: right;
-            width: 70px;
-            height: 70px;
-            background: #f39c12;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 70px; /* Centrado vertical simple */
-            font-size: 32px;
-            font-weight: 800;
-            color: white !important;
+            flex: 1;
+            padding-right: 20px;
         }
 
-        .header-left h1 {
-            font-size: 26px;
+        .header-logo {
+            width: 100px;
+            height: 70px;
+            flex-shrink: 0;
+        }
+
+        .header-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .header h1 {
+            font-size: 24px;
             font-weight: 700;
-            margin-bottom: 2px;
-            color: white !important; /* Color explícito */
+            margin-bottom: 8px;
+            color: black;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .header-subtitle {
             font-size: 14px;
-            font-weight: 300;
-            opacity: 0.9;
-            margin-bottom: 20px;
-            color: white !important; /* Color explícito */
+            font-weight: 400;
+            opacity: 0.95;
+            margin-bottom: 15px;
+            color: black;
         }
 
-        .header-info-grid {
+        .header-info {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 15px;
+            margin-top: 10px;
         }
         
+        .header-info-item {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            backdrop-filter: blur(10px);
+        }
+
         .header-info-item h3 {
             font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-            opacity: 0.8;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            opacity: 0.9;
             margin-bottom: 4px;
-            color: white !important; /* Color explícito */
+            color: black;
         }
 
         .header-info-item p {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            color: white !important; /* Color explícito */
+            color: black;
         }
         
-        /* --- Secciones y Títulos --- */
+        /* --- CONTENIDO PRINCIPAL --- */
+        .content {
+            padding: 25px 20px;
+        }
+
+        /* --- SECCIONES Y TÍTULOS --- */
         .section {
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
 
         .section-header {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .section-icon {
-            font-size: 20px;
-            margin-right: 12px;
-            color: #3498db;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-left: 4px solid #4299e1;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .section-title {
             font-size: 18px;
-            font-weight: 600;
-            color: #1f2937;
+            font-weight: 700;
+            color: #2d3748;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* --- Rejilla de Resumen Ejecutivo --- */
+        /* --- TARJETAS KPI MEJORADAS --- */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 25px;
         }
 
         .kpi-card {
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
             padding: 20px;
             text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            transition: transform 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4299e1, #63b3ed);
         }
 
         .kpi-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: #6b7280;
+            font-size: 11px;
+            font-weight: 600;
+            color: #718096;
             margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .kpi-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1f2937;
+            font-size: 24px;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 4px;
         }
 
-        /* --- Tarjeta de Balance Grande --- */
+        /* --- TARJETA DE BALANCE PRINCIPAL --- */
         .balance-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            color: white;
-            padding: 25px;
+            border-radius: 16px;
+            color: black;
+            padding: 30px;
             text-align: center;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
         }
         
         .balance-label {
             font-size: 14px;
             font-weight: 500;
             opacity: 0.9;
-            margin-bottom: 8px;
-            color: white;
+            margin-bottom: 10px;
+            color: black;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .balance-amount {
             font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 5px;
-            color: white;
+            font-weight: 900;
+            margin-bottom: 8px;
+            color: black;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .balance-status {
-            color: white;
-            font-size: 14px;
-        }
-        
-        /* --- Tarjetas de Grupos --- */
-        .group-card {
-            background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        }
-        
-        .group-header {
-            background: #374151;
-            color: white;
-            padding: 12px 20px;
-        }
-
-        .group-title {
+            color: black;
             font-size: 16px;
             font-weight: 600;
         }
+        
+        /* --- TARJETAS DE GRUPOS MEJORADAS --- */
+        .group-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+        
+        .group-header {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: black;
+            padding: 16px 24px;
+            position: relative;
+        }
+
+        .group-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4299e1, #63b3ed);
+        }
+
+        .group-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
 
         .group-content {
-            padding: 20px;
+            padding: 24px;
         }
         
         .group-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            padding: 15px;
-            background-color: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+            border-bottom: 1px solid #e2e8f0;
+            margin: -24px -24px 24px -24px;
         }
 
         .group-stat {
             text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         .group-stat-label {
             font-size: 10px;
-            color: #6b7280;
+            color: #718096;
             text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
         }
 
         .group-stat-value {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1f2937;
+            font-size: 16px;
+            font-weight: 800;
+            color: #2d3748;
         }
 
-        /* --- Tabla Moderna --- */
+        /* --- TABLA MODERNA MEJORADA --- */
         .table-container {
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         table {
@@ -250,22 +319,22 @@
         }
         
         th {
-            background: #f9fafb;
-            color: #4b5563;
-            padding: 10px 12px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: black;
+            padding: 12px 16px;
             text-align: left;
-            font-weight: 600;
-            font-size: 10px;
+            font-weight: 700;
+            font-size: 11px;
             text-transform: uppercase;
-            border-bottom: 2px solid #e5e7eb;
+            letter-spacing: 0.5px;
         }
         
         td {
-            padding: 12px;
-            border-bottom: 1px solid #f1f3f4;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
-            font-size: 11px;
-            color: #374151;
+            font-size: 12px;
+            color: #2d3748;
         }
         
         tr:last-child td {
@@ -273,83 +342,146 @@
         }
 
         tr:nth-child(even) {
-            background: #fcfcfd;
+            background: #f8fafc;
+        }
+
+        tr:hover {
+            background: #edf2f7;
         }
 
         .amount {
             text-align: right;
-            font-weight: 600;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
         }
         
-        /* --- Elementos Utilitarios --- */
+        /* --- ELEMENTOS UTILITARIOS MEJORADOS --- */
         .currency {
             font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
         }
-        .positive { color: #10b981; }
-        .negative { color: #ef4444; }
+        
+        .positive { 
+            color: #38a169; 
+            font-weight: 700;
+        }
+        
+        .negative { 
+            color: #e53e3e; 
+            font-weight: 700;
+        }
         
         .status-badge {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 9px;
-            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .status-paid { background-color: #d1fae5; color: #065f46; }
-        .status-pending { background-color: #fef3c7; color: #92400e; }
-        .status-na { background-color: #e5e7eb; color: #4b5563; }
+        
+        .status-paid { 
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%); 
+            color: #22543d; 
+            border: 1px solid #9ae6b4;
+        }
+        
+        .status-pending { 
+            background: linear-gradient(135deg, #fef5e7 0%, #fed7aa 100%); 
+            color: #9c4221; 
+            border: 1px solid #fed7aa;
+        }
+        
+        .status-na { 
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%); 
+            color: #4a5568; 
+            border: 1px solid #cbd5e0;
+        }
 
         .you-paid-badge {
-            background: #667eea;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 6px;
-            font-size: 8px;
-            font-weight: 700;
-            margin-left: 5px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: black;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 800;
+            margin-left: 8px;
             display: inline-block;
             vertical-align: middle;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         
-        .page-break { page-break-before: always; }
+        .page-break { 
+            page-break-before: always; 
+        }
         
-        /* --- Footer --- */
+        /* --- FOOTER MEJORADO --- */
         .footer {
-            background: #1f2937;
-            color: #d1d5db;
-            padding: 20px 30px;
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            color: #e2e8f0;
+            padding: 20px;
             text-align: center;
-            font-size: 10px;
-            margin-top: auto;
+            font-size: 11px;
+            margin-top: 30px;
+            position: relative;
         }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #4299e1, #63b3ed);
+        }
+        
         .footer strong {
-            color: #f39c12;
-            font-weight: 600;
+            color: #63b3ed;
+            font-weight: 700;
+        }
+
+        /* --- EFECTOS Y ANIMACIONES --- */
+        .shimmer {
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+            background-size: 200% 100%;
+        }
+
+        /* --- RESPONSIVO PARA PDF --- */
+        @media print {
+            .page {
+                margin: 0;
+                box-shadow: none;
+            }
         }
     </style>
 </head>
 <body>
     <div class="page">
         <div class="header">
-            <div class="header-logo">K</div>
-            <div class="header-left">
-                <h1 style="color: black !important;">{{ $titulo }}</h1>
-                <p class="header-subtitle" style="color: black !important;">Reporte financiero detallado de gastos compartidos</p>
-                
-                <div class="header-info-grid">
-                    <div class="header-info-item">
-                        <h3 style="color: black !important;">Usuario</h3>
-                        <p style="color: black !important; font-weight: 600;">{{ $usuario->nombre }}</p>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>{{ $titulo }}</h1>
+                    <p class="header-subtitle">Reporte financiero detallado de gastos compartidos</p>
+                    
+                    <div class="header-info">
+                        <div class="header-info-item">
+                            <h3>Usuario</h3>
+                            <p>{{ $usuario->nombre }}</p>
+                        </div>
+                        <div class="header-info-item">
+                            <h3>Período</h3>
+                            <p>{{ $fechaInicio->format('d/m/Y') }} - {{ $fechaFin->format('d/m/Y') }}</p>
+                        </div>
+                        <div class="header-info-item">
+                            <h3>Generado</h3>
+                            <p>{{ $fechaGeneracion->format('d/m/Y H:i') }}</p>
+                        </div>
                     </div>
-                    <div class="header-info-item">
-                        <h3 style="color: black !important;">Período</h3>
-                        <p style="color: black !important; font-weight: 600;">{{ $fechaInicio->format('d/m/Y') }} - {{ $fechaFin->format('d/m/Y') }}</p>
-                    </div>
-                    <div class="header-info-item">
-                        <h3 style="color: black !important;">Generado</h3>
-                        <p style="color: black !important; font-weight: 600;">{{ $fechaGeneracion->format('d/m/Y H:i') }}</p>
-                    </div>
+                </div>
+                <div class="header-logo">
+                    <img src="https://www.uleam.edu.ec/wp-content/uploads/2012/09/LOGO-ULEAM-300x216.png" alt="Logo">
                 </div>
             </div>
         </div>
@@ -357,7 +489,6 @@
         <div class="content">
             <div class="section">
                 <div class="section-header">
-                    <div class="section-icon">■</div>
                     <div class="section-title">Resumen Ejecutivo</div>
                 </div>
 
@@ -389,7 +520,7 @@
 
             <div class="section">
                 <div class="section-header">
-                    <div class="section-icon">●</div>
+                    
                     <div class="section-title">Análisis por Grupos</div>
                 </div>
                 
@@ -421,7 +552,11 @@
                         
                         <div class="group-content">
                             @if(count($grupo['gastos']) === 0)
-                                <p>No hay gastos registrados en este grupo para el período seleccionado.</p>
+                                <div style="text-align: center; padding: 40px; color: #718096;">
+                                    <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+                                    <p style="font-size: 16px; font-weight: 600;">No hay gastos registrados</p>
+                                    <p style="font-size: 14px;">No se encontraron gastos en este grupo para el período seleccionado.</p>
+                                </div>
                             @else
                                 <div class="table-container">
                                     <table>
@@ -438,10 +573,10 @@
                                         <tbody>
                                             @foreach($grupo['gastos'] as $gasto)
                                                 <tr>
-                                                    <td>{{ \Carbon\Carbon::parse($gasto['fecha'])->format('d/m/Y') }}</td>
-                                                    <td>{{ $gasto['descripcion'] }}</td>
+                                                    <td style="font-weight: 600;">{{ \Carbon\Carbon::parse($gasto['fecha'])->format('d/m/Y') }}</td>
+                                                    <td style="font-weight: 500;">{{ $gasto['descripcion'] }}</td>
                                                     <td class="amount currency">${{ number_format($gasto['monto'], 2) }}</td>
-                                                    <td>
+                                                    <td style="font-weight: 500;">
                                                         {{ $gasto['pagador'] }}
                                                         @if($gasto['usuario_pago'])
                                                             <span class="you-paid-badge">TÚ</span>
@@ -451,7 +586,7 @@
                                                         @if($gasto['participacion_usuario'] > 0)
                                                             ${{ number_format($gasto['participacion_usuario'], 2) }}
                                                         @else
-                                                            <span style="color: #9ca3af;">—</span>
+                                                            <span style="color: #a0aec0; font-style: italic;">—</span>
                                                         @endif
                                                     </td>
                                                     <td>
@@ -474,8 +609,12 @@
                         </div>
                     </div>
                 @empty
-                    <div class="kpi-card">
-                        <p>No se encontraron grupos con gastos en el período seleccionado.</p>
+                    <div class="kpi-card" style="grid-column: 1 / -1; padding: 40px;">
+                        <div style="text-align: center; color: #718096;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+                            <p style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No hay grupos disponibles</p>
+                            <p style="font-size: 14px;">No se encontraron grupos con gastos en el período seleccionado.</p>
+                        </div>
                     </div>
                 @endforelse
             </div>
