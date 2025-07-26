@@ -76,7 +76,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sync/push', [UsuarioController::class, 'pushChanges'])->name('sync.push');
     Route::post('/sync/pull', [UsuarioController::class, 'pullChanges'])->name('sync.pull');
     Route::get('/sync/status', [UsuarioController::class, 'syncStatus'])->name('sync.status');
-<<<<<<< HEAD
 
     // ======= NUEVAS RUTAS PARA TIEMPO REAL =======
     
@@ -105,10 +104,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/notas/{notaId}', [NotaController::class, 'destroy'])->name('notas.destroy');
     Route::post('/notas/{notaId}/lock', [NotaController::class, 'lock'])->name('notas.lock'); // Bloquear para edición
     Route::post('/notas/{notaId}/unlock', [NotaController::class, 'unlock'])->name('notas.unlock'); // Liberar bloqueo
-=======
     
     // Rutas de Reportes
     Route::get('/reportes/balance/pdf', [ReporteController::class, 'balancePdf'])->name('reportes.balance.pdf');
     Route::get('/reportes/balance/resumen', [ReporteController::class, 'resumenBalance'])->name('reportes.balance.resumen');
->>>>>>> d132e7abc550091ccd0d82a98167d31767f5952d
 });
