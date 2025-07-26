@@ -10,6 +10,7 @@ use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\TableroController;
 use App\Http\Controllers\TareaController;
 use App\Http\Controllers\NotaController;
+use App\Http\Controllers\ReporteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,6 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rutas para obtener datos relacionados al usuario (ya las tienes)
     Route::get('/user/groups', [UsuarioController::class, 'myGroups']); // Reemplazado por GrupoController@index
     Route::get('/user/expenses', [UsuarioController::class, 'myExpenses']); // Se puede obtener de GastoController o mantener si la lógica es distinta
+    Route::get('/user/gastos', [UsuarioController::class, 'myExpenses']); // Ruta específica para gastos del usuario
+    Route::get('/user/deudas', [UsuarioController::class, 'myDebts']); // Ruta específica para deudas del usuario
     Route::get('/user/conflicts', [UsuarioController::class, 'myConflicts']); // Reemplazado por SyncConflictoController@index
 
     // Rutas de Grupos
@@ -73,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sync/push', [UsuarioController::class, 'pushChanges'])->name('sync.push');
     Route::post('/sync/pull', [UsuarioController::class, 'pullChanges'])->name('sync.pull');
     Route::get('/sync/status', [UsuarioController::class, 'syncStatus'])->name('sync.status');
+<<<<<<< HEAD
 
     // ======= NUEVAS RUTAS PARA TIEMPO REAL =======
     
@@ -101,4 +105,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/notas/{notaId}', [NotaController::class, 'destroy'])->name('notas.destroy');
     Route::post('/notas/{notaId}/lock', [NotaController::class, 'lock'])->name('notas.lock'); // Bloquear para edición
     Route::post('/notas/{notaId}/unlock', [NotaController::class, 'unlock'])->name('notas.unlock'); // Liberar bloqueo
+=======
+    
+    // Rutas de Reportes
+    Route::get('/reportes/balance/pdf', [ReporteController::class, 'balancePdf'])->name('reportes.balance.pdf');
+    Route::get('/reportes/balance/resumen', [ReporteController::class, 'resumenBalance'])->name('reportes.balance.resumen');
+>>>>>>> d132e7abc550091ccd0d82a98167d31767f5952d
 });
