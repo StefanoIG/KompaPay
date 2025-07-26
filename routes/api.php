@@ -7,6 +7,9 @@ use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\GastoController;
 use App\Http\Controllers\SyncConflictoController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\TableroController;
+use App\Http\Controllers\TareaController;
+use App\Http\Controllers\NotaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,4 +73,32 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sync/push', [UsuarioController::class, 'pushChanges'])->name('sync.push');
     Route::post('/sync/pull', [UsuarioController::class, 'pullChanges'])->name('sync.pull');
     Route::get('/sync/status', [UsuarioController::class, 'syncStatus'])->name('sync.status');
+
+    // ======= NUEVAS RUTAS PARA TIEMPO REAL =======
+    
+    // Rutas de Tableros (Trello-like)
+    Route::get('/grupos/{grupoId}/tableros', [TableroController::class, 'index'])->name('tableros.index');
+    Route::post('/grupos/{grupoId}/tableros', [TableroController::class, 'store'])->name('tableros.store');
+    Route::get('/grupos/{grupoId}/tableros/{tableroId}', [TableroController::class, 'show'])->name('tableros.show');
+    Route::put('/grupos/{grupoId}/tableros/{tableroId}', [TableroController::class, 'update'])->name('tableros.update');
+    Route::delete('/grupos/{grupoId}/tableros/{tableroId}', [TableroController::class, 'destroy'])->name('tableros.destroy');
+    Route::post('/grupos/{grupoId}/tableros/reorder', [TableroController::class, 'reorder'])->name('tableros.reorder');
+
+    // Rutas de Tareas
+    Route::get('/tableros/{tableroId}/tareas', [TareaController::class, 'index'])->name('tareas.index');
+    Route::post('/tableros/{tableroId}/tareas', [TareaController::class, 'store'])->name('tareas.store');
+    Route::get('/tareas/{tareaId}', [TareaController::class, 'show'])->name('tareas.show');
+    Route::put('/tareas/{tareaId}', [TareaController::class, 'update'])->name('tareas.update');
+    Route::delete('/tareas/{tareaId}', [TareaController::class, 'destroy'])->name('tareas.destroy');
+    Route::post('/tareas/{tareaId}/move', [TareaController::class, 'move'])->name('tareas.move'); // Mover entre tableros
+    Route::post('/tareas/reorder', [TareaController::class, 'reorder'])->name('tareas.reorder');
+
+    // Rutas de Notas colaborativas
+    Route::get('/grupos/{grupoId}/notas', [NotaController::class, 'index'])->name('notas.index');
+    Route::post('/grupos/{grupoId}/notas', [NotaController::class, 'store'])->name('notas.store');
+    Route::get('/notas/{notaId}', [NotaController::class, 'show'])->name('notas.show');
+    Route::put('/notas/{notaId}', [NotaController::class, 'update'])->name('notas.update');
+    Route::delete('/notas/{notaId}', [NotaController::class, 'destroy'])->name('notas.destroy');
+    Route::post('/notas/{notaId}/lock', [NotaController::class, 'lock'])->name('notas.lock'); // Bloquear para edición
+    Route::post('/notas/{notaId}/unlock', [NotaController::class, 'unlock'])->name('notas.unlock'); // Liberar bloqueo
 });

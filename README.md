@@ -1,61 +1,192 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# KompaPay - Sistema de Colaboración Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend Laravel para el sistema de colaboración en tiempo real de KompaPay con tableros estilo Trello y notas colaborativas.
 
-## About Laravel
+## 🏗️ Tecnologías
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Laravel 11** - Framework PHP
+- **Pusher** - WebSockets en tiempo real
+- **MySQL/SQLite** - Base de datos
+- **Sanctum** - Autenticación API
+- **UUIDs** - Identificadores únicos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📊 Modelos Principales
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Grupos
+- UUIDs como primary key
+- Sistema de membresía de usuarios
+- Autorización basada en pertenencia
+- Gestión de permisos por grupo
 
-## Learning Laravel
+### Tableros (Trello-style)
+- UUIDs como primary key
+- Ordenamiento automático
+- Colores personalizables
+- Pertenecen a grupos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Tareas
+- Estados: `pendiente`, `en_progreso`, `completada`
+- Prioridades: `baja`, `media`, `alta`
+- Asignación a usuarios del grupo
+- Fechas de vencimiento
+- Etiquetas JSON
+- Drag & drop con ordenamiento
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Notas Colaborativas
+- Edición simultánea con bloqueos
+- Control de versiones automático
+- Resolución de conflictos
+- Indicadores de "usuario escribiendo"
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🔧 Funcionalidades Implementadas
 
-## Laravel Sponsors
+### Sistema de Grupos
+- Creación y gestión de grupos
+- Membresía de usuarios
+- Autorización basada en pertenencia
+- UUIDs públicos para identificación
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### WebSockets en Tiempo Real
+- Canales privados por grupo
+- Eventos de creación/actualización/eliminación
+- Sincronización automática entre clientes
+- Presencia de usuarios online
 
-### Premium Partners
+### Autenticación y Autorización
+- Sanctum para API tokens
+- Políticas de acceso por recurso
+- Middleware de autenticación obligatorio
+- Validación de pertenencia a grupos
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+### Sistema de Bloqueos
+- Bloqueo exclusivo para edición de notas
+- Timeout automático de bloqueos
+- Eventos WebSocket para bloqueos/desbloqueos
 
-## Contributing
+## 🎯 Reglas de Negocio
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Grupos
+- Solo miembros pueden acceder a recursos del grupo
+- UUIDs únicos para identificación pública
+- Administradores pueden gestionar membresía
 
-## Code of Conduct
+### Tableros
+- Solo miembros del grupo pueden crear/ver tableros
+- Ordenamiento automático al crear nuevos tableros
+- No se puede eliminar tablero con tareas activas
+- Colores personalizables por tablero
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Tareas
+- Solo se pueden asignar a miembros del grupo
+- Estado `completada` es final (no se puede revertir)
+- Fechas de vencimiento opcionales
+- Etiquetas personalizables por grupo
+- Ordenamiento automático en creación
 
-## Security Vulnerabilities
+### Notas
+- Bloqueo automático al iniciar edición
+- Solo un usuario puede editar a la vez
+- Versionado automático en cada actualización
+- Resolución de conflictos con merge automático
+- Timeout de bloqueo para prevenir bloqueos permanentes
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Seguridad
+- Todos los endpoints requieren autenticación
+- Validación de pertenencia a grupo en cada operación
+- Logs de auditoría para cambios importantes
+- Rate limiting en endpoints críticos
+- Validación de entrada en todos los requests
 
-## License
+## 🔄 Eventos WebSocket
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Grupos
+- `grupo.updated` - Cambios en grupo
+- `grupo.member_added` - Nuevo miembro
+- `grupo.member_removed` - Miembro eliminado
+
+### Tableros
+- `tablero.created` - Nuevo tablero
+- `tablero.updated` - Cambios en tablero
+- `tablero.deleted` - Tablero eliminado
+
+### Tareas
+- `tarea.created` - Nueva tarea
+- `tarea.updated` - Cambios en tarea
+- `tarea.moved` - Tarea movida entre tableros
+- `tarea.deleted` - Tarea eliminada
+
+### Notas
+- `nota.updated` - Contenido actualizado
+- `nota.locked/unlocked` - Estados de bloqueo
+- `user.typing` - Usuario escribiendo
+- `user.stopped-typing` - Usuario dejó de escribir
+
+## 🗄️ Base de Datos
+
+### Características Técnicas
+- UUIDs en todas las tablas principales
+- Índices optimizados para consultas frecuentes
+- Foreign keys con cascadas apropiadas
+- Timestamps automáticos
+- Soft deletes donde aplica
+
+### Relaciones
+- Grupos → Tableros (1:N)
+- Grupos → Usuarios (N:N) mediante pivot
+- Tableros → Tareas (1:N)
+- Grupos → Notas (1:N)
+- Users → Tareas (1:N) como asignado
+- Users → Notas (1:N) como editor/bloqueador
+
+## 🚀 Configuración
+
+### Variables de Entorno
+```env
+PUSHER_APP_ID=your_app_id
+PUSHER_APP_KEY=your_app_key
+PUSHER_APP_SECRET=your_app_secret
+PUSHER_APP_CLUSTER=mt1
+BROADCAST_DRIVER=pusher
+```
+
+### Comandos de Setup
+```bash
+composer install
+php artisan migrate
+php artisan db:seed
+```
+
+## 🔐 Seguridad
+
+- Autenticación Sanctum obligatoria
+- Políticas de autorización por modelo
+- Validación de entrada en todos los endpoints
+- Canales WebSocket privados
+- Rate limiting configurado
+- Logs de auditoría implementados
+
+## 📋 API Endpoints Principales
+
+- `/api/grupos` - CRUD grupos
+- `/api/grupos/{id}/tableros` - CRUD tableros
+- `/api/tableros/{id}/tareas` - CRUD tareas
+- `/api/grupos/{id}/notas` - CRUD notas
+- `/api/notas/{id}/lock` - Sistema de bloqueos
+- `/api/*/reorder` - Reordenamiento drag & drop
+
+## 🧪 Testing
+
+- Tests de feature para todos los CRUDs
+- Tests de WebSocket events
+- Tests de autorización y políticas
+- Tests de integración Pusher
+- Tests de reglas de negocio
+
+## 📈 Rendimiento
+
+- Eager loading en relaciones frecuentes
+- Índices en campos de consulta
+- Paginación en listados
+- Cache de queries repetitivas
+- Optimización de eventos WebSocket
+- Queue jobs para operaciones pesadas
