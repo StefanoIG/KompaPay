@@ -1,0 +1,79 @@
+services:
+  - type: web
+    name: kompapay-backend
+    env: docker
+    repo: https://github.com/your-username/kompapay.git
+    region: oregon
+    plan: starter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: APP_NAME
+        value: KompaPay
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        fromService:
+          type: web
+          name: kompapay-backend
+          property: host
+      - key: LOG_LEVEL
+        value: error
+      - key: LOG_CHANNEL
+        value: stack
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: kompapay-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: kompapay-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: kompapay-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: kompapay-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: kompapay-db
+          property: password
+      - key: BROADCAST_CONNECTION
+        value: pusher
+      - key: BROADCAST_DRIVER
+        value: pusher
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      # Estas variables deben ser añadidas manualmente con valores reales
+      - key: APP_KEY
+        value: ""  # Generar con: php artisan key:generate --show
+      - key: PUSHER_APP_ID
+        value: ""  # Tu App ID de Pusher
+      - key: PUSHER_APP_KEY
+        value: ""  # Tu App Key de Pusher
+      - key: PUSHER_APP_SECRET
+        value: ""  # Tu App Secret de Pusher
+      - key: PUSHER_APP_CLUSTER
+        value: mt1
+      - key: PUSHER_SCHEME
+        value: https
+      - key: PUSHER_PORT
+        value: 443
+
+databases:
+  - name: kompapay-db
+    databaseName: kompapay
+    user: kompapay_user
+    region: oregon
+    plan: starter
