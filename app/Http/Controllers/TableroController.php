@@ -18,26 +18,38 @@ class TableroController extends Controller
      */
     public function index($grupoId)
     {
-        $user = Auth::user();
-        $grupo = Grupo::find($grupoId);
+        try {
+            $user = Auth::user();
+            $grupo = Grupo::find($grupoId);
 
-        if (!$grupo) {
-            return response()->json(['success' => false, 'message' => 'Grupo no encontrado.'], 404);
+            if (!$grupo) {
+                return response()->json(['success' => false, 'message' => 'Grupo no encontrado.'], 404);
+            }
+
+            // Verificar que el usuario pertenece al grupo
+            if (!$grupo->miembros->contains($user->id) && $grupo->creado_por !== $user->id) {
+                return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+            }
+
+            $tableros = $grupo->tableros()->with(['tareas' => function($query) {
+                $query->with(['asignado', 'creador'])->orderBy('orden');
+            }])->orderBy('orden')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $tableros
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error obteniendo tableros: ' . $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'error_trace' => $e->getTraceAsString(),
+                'grupo_id' => $grupoId
+            ], 500);
         }
-
-        // Verificar que el usuario pertenece al grupo
-        if (!$grupo->miembros->contains($user->id) && $grupo->creado_por !== $user->id) {
-            return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
-        }
-
-        $tableros = $grupo->tableros()->with(['tareas' => function($query) {
-            $query->with(['asignado', 'creador'])->orderBy('orden');
-        }])->orderBy('orden')->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $tableros
-        ]);
     }
 
     /**
