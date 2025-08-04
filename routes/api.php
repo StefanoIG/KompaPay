@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\GastoController;
@@ -27,6 +28,35 @@ Route::get('/health', function () {
         'environment' => app()->environment(),
         'version' => '1.0.0'
     ]);
+});
+
+// Ruta temporal para ejecutar migración de fix (SOLO PARA PRODUCCIÓN)
+Route::get('/admin/fix-tokens-migration', function () {
+    try {
+        // Verificar que estamos en producción
+        if (app()->environment('local')) {
+            return response()->json([
+                'error' => 'Este endpoint solo funciona en producción'
+            ], 403);
+        }
+        
+        // Ejecutar las migraciones pendientes
+        Artisan::call('migrate', ['--force' => true]);
+        
+        $output = Artisan::output();
+        
+        return response()->json([
+            'message' => 'Migración ejecutada exitosamente',
+            'output' => $output,
+            'status' => 'success'
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error ejecutando migración: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
 });
 
 // Ruta para verificar usuarios de prueba (temporal para debugging)
