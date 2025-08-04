@@ -18,8 +18,10 @@ fi
 # Copiar configuración personalizada de nginx
 if [ -f "/var/www/html/conf/nginx/nginx-site.conf" ]; then
     echo "Copying custom nginx configuration..."
-    cp /var/www/html/conf/nginx/nginx-site.conf /etc/nginx/sites-available/default.conf
-    cp /var/www/html/conf/nginx/nginx-site.conf /etc/nginx/conf.d/default.conf
+    cp /var/www/html/conf/nginx/nginx-site.conf /etc/nginx/sites-available/default.conf || echo "Failed to copy to sites-available"
+    # Try copying to conf.d directory (create if needed)
+    mkdir -p /etc/nginx/conf.d
+    cp /var/www/html/conf/nginx/nginx-site.conf /etc/nginx/conf.d/default.conf || echo "Failed to copy to conf.d"
 fi
 
 # Verificar configuración de nginx

@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command->info('🌱 Iniciando seeders...');
+        $this->command->info('Iniciando seeders...');
         
         // Crear usuarios de prueba (evitar duplicados)
         $usuario1 = User::firstOrCreate(
@@ -50,7 +50,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        $this->command->info("✅ Usuarios creados: {$usuario1->nombre}, {$usuario2->nombre}, {$usuario3->nombre}");
+        $this->command->info("Usuarios creados: {$usuario1->nombre}, {$usuario2->nombre}, {$usuario3->nombre}");
 
         // Crear grupos de prueba (evitar duplicados)
         $grupo1 = Grupo::firstOrCreate(
@@ -77,7 +77,7 @@ class DatabaseSeeder extends Seeder
             $grupo2->miembros()->attach([$usuario1->id, $usuario2->id]);
         }
 
-        $this->command->info("✅ Grupos creados: {$grupo1->nombre}, {$grupo2->nombre}");
+        $this->command->info("Grupos creados: {$grupo1->nombre}, {$grupo2->nombre}");
 
         // Crear gastos de prueba (evitar duplicados)
         $gasto1 = Gasto::firstOrCreate(
@@ -190,24 +190,24 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        $this->command->info('✅ Datos de prueba creados exitosamente:');
-        $this->command->info('👤 Usuario 1: ' . $usuario1->email . ' (Ana García)');
-        $this->command->info('👤 Usuario 2: ' . $usuario2->email . ' (Carlos López)');
-        $this->command->info('👤 Usuario 3: ' . $usuario3->email . ' (María Rodríguez)');
-        $this->command->info('🏖️ Grupo 1: ' . $grupo1->nombre . ' (ID público: ' . $grupo1->id_publico . ')');
-        $this->command->info('🎂 Grupo 2: ' . $grupo2->nombre . ' (ID público: ' . $grupo2->id_publico . ')');
-        $this->command->info('💰 3 gastos creados con participantes');
-        $this->command->info('🔑 Contraseña para todos: password123');
+        $this->command->info('Datos de prueba creados exitosamente:');
+        $this->command->info('Usuario 1: ' . $usuario1->email . ' (Ana García)');
+        $this->command->info('Usuario 2: ' . $usuario2->email . ' (Carlos López)');
+        $this->command->info('Usuario 3: ' . $usuario3->email . ' (María Rodríguez)');
+        $this->command->info('Grupo 1: ' . $grupo1->nombre . ' (ID público: ' . $grupo1->id_publico . ')');
+        $this->command->info('Grupo 2: ' . $grupo2->nombre . ' (ID público: ' . $grupo2->id_publico . ')');
+        $this->command->info('3 gastos creados con participantes');
+        $this->command->info('Contraseña para todos: password123');
         
         // Estadísticas finales
         $totalUsuarios = User::count();
         $totalGrupos = Grupo::count();
         $totalGastos = Gasto::count();
         
-        $this->command->info('📊 RESUMEN FINAL:');
-        $this->command->info("   👥 Total usuarios: {$totalUsuarios}");
-        $this->command->info("   👥 Total grupos: {$totalGrupos}");
-        $this->command->info("   💰 Total gastos: {$totalGastos}");
-        $this->command->info('🌱 ¡Seeders ejecutados exitosamente!');
+        $this->command->info('RESUMEN FINAL:');
+        $this->command->info("   Total usuarios: {$totalUsuarios}");
+        $this->command->info("   Total grupos: {$totalGrupos}");
+        $this->command->info("   Total gastos: {$totalGastos}");
+        $this->command->info('Seeders ejecutados exitosamente!');
     }
 }
