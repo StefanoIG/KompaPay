@@ -60,4 +60,12 @@ class Grupo extends Model
     {
         return $this->hasMany(Gasto::class);
     }
+
+    /**
+     * Get the tableros of the group.
+     */
+    public function tableros(): HasMany
+    {
+        return $this->hasMany(Tablero::class);
+    }
 }
