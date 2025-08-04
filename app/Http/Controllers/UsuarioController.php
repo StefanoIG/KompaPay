@@ -373,31 +373,37 @@ class UsuarioController extends Controller
             // Deudas donde el usuario debe dinero (participante no pagado)
             $deudas = $user->gastosParticipante()
                 ->wherePivot('pagado', false)
-                ->with(['pagador', 'grupo', 'participantes'])
+                ->with(['pagador', 'grupo'])
                 ->get()
                 ->map(function ($gasto) use ($user) {
-                    $pivot = $gasto->participantes->where('id', $user->id)->first()->pivot;
+                    // Obtener la información del pivot para este usuario específico
+                    $pivot = $gasto->participantes()->where('user_id', $user->id)->first();
+                    if (!$pivot) return null;
+                    
                     return [
                         'gasto_id' => $gasto->id,
                         'gasto_id_publico' => $gasto->id_publico,
                         'descripcion' => $gasto->descripcion,
                         'monto_total' => $gasto->monto,
-                        'monto_adeudado' => $pivot->monto_proporcional,
+                        'monto_adeudado' => $pivot->pivot->monto_proporcional,
                         'pagado_por' => $gasto->pagador->nombre,
                         'grupo' => $gasto->grupo->nombre,
                         'fecha_creacion' => $gasto->fecha_creacion,
                     ];
-                });
+                })->filter(); // Filtrar elementos nulos
             
             // Deudas donde le deben dinero al usuario (gastos pagados por él con participantes no pagados)
             $acreencias = $user->gastosPagados()
-                ->whereHas('participantes', function ($query) {
-                    $query->wherePivot('pagado', false);
-                })
-                ->with(['grupo', 'participantes'])
+                ->with(['grupo'])
                 ->get()
                 ->map(function ($gasto) use ($user) {
-                    $participantesNoPagados = $gasto->participantes->where('pivot.pagado', false);
+                    // Obtener participantes no pagados para este gasto
+                    $participantesNoPagados = $gasto->participantes()
+                        ->wherePivot('pagado', false)
+                        ->get();
+                    
+                    if ($participantesNoPagados->isEmpty()) return null;
+                    
                     $montoAdeudado = $participantesNoPagados->sum('pivot.monto_proporcional');
                     return [
                         'gasto_id' => $gasto->id,
@@ -409,13 +415,13 @@ class UsuarioController extends Controller
                         'grupo' => $gasto->grupo->nombre,
                         'fecha_creacion' => $gasto->fecha_creacion,
                     ];
-                });
+                })->filter(); // Filtrar elementos nulos
             
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'deudas' => $deudas,
-                    'acreencias' => $acreencias,
+                    'deudas' => $deudas->values(), // Resetear índices
+                    'acreencias' => $acreencias->values(),
                     'resumen' => [
                         'total_deudas' => $deudas->sum('monto_adeudado'),
                         'total_acreencias' => $acreencias->sum('monto_adeudado'),
