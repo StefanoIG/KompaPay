@@ -35,9 +35,34 @@ fi
 echo "📊 Ejecutando migraciones..."
 php artisan migrate --force
 
-# Ejecutar seeders si existen
-echo "🌱 Ejecutando seeders..."
-php artisan db:seed --force || echo "No seeders o seeding falló, continuando..."
+# Verificar que las migraciones se ejecutaron correctamente
+if php artisan migrate:status | grep -q "Ran"; then
+    echo "✅ Migraciones ejecutadas correctamente"
+else
+    echo "❌ Error en migraciones"
+    exit 1
+fi
+
+# FORZAR EJECUCIÓN DE SEEDERS
+echo "🌱 EJECUTANDO SEEDERS OBLIGATORIAMENTE..."
+echo "⚠️  Esto creará datos de prueba en la base de datos"
+
+# Intentar ejecutar seeders y capturar el resultado
+if php artisan db:seed --force --class=DatabaseSeeder; then
+    echo "✅ Seeders ejecutados exitosamente"
+    echo "👥 Datos de prueba creados en la base de datos"
+else
+    echo "⚠️  Primera ejecución de seeders falló, intentando de nuevo..."
+    # Segundo intento
+    if php artisan db:seed --force; then
+        echo "✅ Seeders ejecutados en el segundo intento"
+    else
+        echo "❌ Error: No se pudieron ejecutar los seeders"
+        echo "🔍 Revisando estado de la base de datos..."
+        php artisan tinker --execute="echo 'Usuarios: ' . App\Models\User::count(); echo 'Grupos: ' . App\Models\Grupo::count();"
+        echo "⚠️  Continuando sin seeders..."
+    fi
+fi
 
 # Optimizar para producción
 echo "⚡ Optimizando para producción..."

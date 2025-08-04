@@ -17,74 +17,94 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Crear usuarios de prueba
-        $usuario1 = User::create([
-            'nombre' => 'Ana García',
-            'email' => 'ana@kompapay.com',
-            'password' => Hash::make('password123'),
-            'id_publico' => Str::uuid(),
-            'ultima_sync' => Carbon::now(),
-        ]);
+        $this->command->info('🌱 Iniciando seeders...');
+        
+        // Crear usuarios de prueba (evitar duplicados)
+        $usuario1 = User::firstOrCreate(
+            ['email' => 'ana@kompapay.com'],
+            [
+                'nombre' => 'Ana García',
+                'password' => Hash::make('password123'),
+                'id_publico' => Str::uuid(),
+                'ultima_sync' => Carbon::now(),
+            ]
+        );
 
-        $usuario2 = User::create([
-            'nombre' => 'Carlos López',
-            'email' => 'carlos@kompapay.com',
-            'password' => Hash::make('password123'),
-            'id_publico' => Str::uuid(),
-            'ultima_sync' => Carbon::now(),
-        ]);
+        $usuario2 = User::firstOrCreate(
+            ['email' => 'carlos@kompapay.com'],
+            [
+                'nombre' => 'Carlos López',
+                'password' => Hash::make('password123'),
+                'id_publico' => Str::uuid(),
+                'ultima_sync' => Carbon::now(),
+            ]
+        );
 
-        $usuario3 = User::create([
-            'nombre' => 'María Rodríguez',
-            'email' => 'maria@kompapay.com',
-            'password' => Hash::make('password123'),
-            'id_publico' => Str::uuid(),
-            'ultima_sync' => Carbon::now(),
-        ]);
+        $usuario3 = User::firstOrCreate(
+            ['email' => 'maria@kompapay.com'],
+            [
+                'nombre' => 'María Rodríguez',
+                'password' => Hash::make('password123'),
+                'id_publico' => Str::uuid(),
+                'ultima_sync' => Carbon::now(),
+            ]
+        );
 
-        // Crear grupos de prueba
-        $grupo1 = Grupo::create([
-            'nombre' => 'Vacaciones en Cancún',
-            'creado_por' => $usuario1->id,
-            'id_publico' => Str::uuid(),
-            'fecha_creacion' => Carbon::now(),
-        ]);
+        $this->command->info("✅ Usuarios creados: {$usuario1->nombre}, {$usuario2->nombre}, {$usuario3->nombre}");
 
-        $grupo2 = Grupo::create([
-            'nombre' => 'Cena de Cumpleaños',
-            'creado_por' => $usuario2->id,
-            'id_publico' => Str::uuid(),
-            'fecha_creacion' => Carbon::now(),
-        ]);
+        // Crear grupos de prueba (evitar duplicados)
+        $grupo1 = Grupo::firstOrCreate(
+            ['nombre' => 'Vacaciones en Cancún', 'creado_por' => $usuario1->id],
+            [
+                'id_publico' => Str::uuid(),
+                'fecha_creacion' => Carbon::now(),
+            ]
+        );
 
-        // Agregar miembros a los grupos
-        $grupo1->miembros()->attach([$usuario1->id, $usuario2->id, $usuario3->id]);
-        $grupo2->miembros()->attach([$usuario1->id, $usuario2->id]);
+        $grupo2 = Grupo::firstOrCreate(
+            ['nombre' => 'Cena de Cumpleaños', 'creado_por' => $usuario2->id],
+            [
+                'id_publico' => Str::uuid(),
+                'fecha_creacion' => Carbon::now(),
+            ]
+        );
 
-        // Crear gastos de prueba
-        $gasto1 = Gasto::create([
-            'grupo_id' => $grupo1->id,
-            'descripcion' => 'Hotel Resort - 3 noches',
-            'monto' => 1500.00,
-            'pagado_por' => $usuario1->id,
-            'modificado_por' => $usuario1->id,
-            'id_publico' => Str::uuid(),
-            'tipo_division' => 'equitativa',
-            'fecha_creacion' => Carbon::now(),
-            'ultima_modificacion' => Carbon::now(),
-        ]);
+        // Agregar miembros a los grupos (solo si no están ya agregados)
+        if (!$grupo1->miembros()->where('user_id', $usuario1->id)->exists()) {
+            $grupo1->miembros()->attach([$usuario1->id, $usuario2->id, $usuario3->id]);
+        }
+        if (!$grupo2->miembros()->where('user_id', $usuario1->id)->exists()) {
+            $grupo2->miembros()->attach([$usuario1->id, $usuario2->id]);
+        }
 
-        $gasto2 = Gasto::create([
-            'grupo_id' => $grupo1->id,
-            'descripcion' => 'Vuelos México-Cancún',
-            'monto' => 900.00,
-            'pagado_por' => $usuario2->id,
-            'modificado_por' => $usuario2->id,
-            'id_publico' => Str::uuid(),
-            'tipo_division' => 'equitativa',
-            'fecha_creacion' => Carbon::now(),
-            'ultima_modificacion' => Carbon::now(),
-        ]);
+        $this->command->info("✅ Grupos creados: {$grupo1->nombre}, {$grupo2->nombre}");
+
+        // Crear gastos de prueba (evitar duplicados)
+        $gasto1 = Gasto::firstOrCreate(
+            ['grupo_id' => $grupo1->id, 'descripcion' => 'Hotel Resort - 3 noches'],
+            [
+                'monto' => 1500.00,
+                'pagado_por' => $usuario1->id,
+                'modificado_por' => $usuario1->id,
+                'id_publico' => Str::uuid(),
+                'tipo_division' => 'equitativa',
+                'fecha_creacion' => Carbon::now(),
+                'ultima_modificacion' => Carbon::now(),
+            ]
+        );
+
+        $gasto2 = Gasto::firstOrCreate(
+            ['grupo_id' => $grupo1->id, 'descripcion' => 'Vuelos México-Cancún'],
+            [
+                'monto' => 900.00,
+                'pagado_por' => $usuario2->id,
+                'modificado_por' => $usuario2->id,
+                'id_publico' => Str::uuid(),
+                'tipo_division' => 'equitativa',
+                'fecha_creacion' => Carbon::now(),
+                'ultima_modificacion' => Carbon::now(),
+            ]
+        );
 
         $gasto3 = Gasto::create([
             'grupo_id' => $grupo2->id,
@@ -171,12 +191,23 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->command->info('✅ Datos de prueba creados exitosamente:');
-        $this->command->info("👤 Usuario 1: {$usuario1->email} (Ana García)");
-        $this->command->info("👤 Usuario 2: {$usuario2->email} (Carlos López)");
-        $this->command->info("👤 Usuario 3: {$usuario3->email} (María Rodríguez)");
-        $this->command->info("🏖️ Grupo 1: {$grupo1->nombre} (ID público: {$grupo1->id_publico})");
-        $this->command->info("🎂 Grupo 2: {$grupo2->nombre} (ID público: {$grupo2->id_publico})");
-        $this->command->info("💰 3 gastos creados con participantes");
-        $this->command->info("🔑 Contraseña para todos: password123");
+        $this->command->info('👤 Usuario 1: ' . $usuario1->email . ' (Ana García)');
+        $this->command->info('👤 Usuario 2: ' . $usuario2->email . ' (Carlos López)');
+        $this->command->info('👤 Usuario 3: ' . $usuario3->email . ' (María Rodríguez)');
+        $this->command->info('🏖️ Grupo 1: ' . $grupo1->nombre . ' (ID público: ' . $grupo1->id_publico . ')');
+        $this->command->info('🎂 Grupo 2: ' . $grupo2->nombre . ' (ID público: ' . $grupo2->id_publico . ')');
+        $this->command->info('💰 3 gastos creados con participantes');
+        $this->command->info('🔑 Contraseña para todos: password123');
+        
+        // Estadísticas finales
+        $totalUsuarios = User::count();
+        $totalGrupos = Grupo::count();
+        $totalGastos = Gasto::count();
+        
+        $this->command->info('📊 RESUMEN FINAL:');
+        $this->command->info("   👥 Total usuarios: {$totalUsuarios}");
+        $this->command->info("   👥 Total grupos: {$totalGrupos}");
+        $this->command->info("   💰 Total gastos: {$totalGastos}");
+        $this->command->info('🌱 ¡Seeders ejecutados exitosamente!');
     }
 }
