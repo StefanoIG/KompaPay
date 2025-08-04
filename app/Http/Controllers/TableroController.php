@@ -153,4 +153,161 @@ class TableroController extends Controller
             'data' => $tableros
         ]);
     }
+
+    /**
+     * Mostrar un tablero específico
+     */
+    public function show($grupoId, $tableroId)
+    {
+        try {
+            $user = Auth::user();
+            $grupo = Grupo::find($grupoId);
+
+            if (!$grupo) {
+                return response()->json(['success' => false, 'message' => 'Grupo no encontrado.'], 404);
+            }
+
+            // Verificar que el usuario pertenece al grupo
+            if (!$grupo->miembros->contains($user->id) && $grupo->creado_por !== $user->id) {
+                return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+            }
+
+            $tablero = Tablero::where('id', $tableroId)
+                             ->where('grupo_id', $grupoId)
+                             ->with(['tareas' => function($query) {
+                                 $query->with(['asignado', 'creador'])->orderBy('orden');
+                             }, 'creador'])
+                             ->first();
+
+            if (!$tablero) {
+                return response()->json(['success' => false, 'message' => 'Tablero no encontrado.'], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $tablero
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error obteniendo tablero: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar un tablero
+     */
+    public function update(Request $request, $grupoId, $tableroId)
+    {
+        try {
+            $user = Auth::user();
+            $grupo = Grupo::find($grupoId);
+
+            if (!$grupo) {
+                return response()->json(['success' => false, 'message' => 'Grupo no encontrado.'], 404);
+            }
+
+            // Verificar permisos
+            if (!$grupo->miembros->contains($user->id) && $grupo->creado_por !== $user->id) {
+                return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+            }
+
+            $tablero = Tablero::where('id', $tableroId)
+                             ->where('grupo_id', $grupoId)
+                             ->first();
+
+            if (!$tablero) {
+                return response()->json(['success' => false, 'message' => 'Tablero no encontrado.'], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'nombre' => 'sometimes|required|string|max:255',
+                'descripcion' => 'nullable|string',
+                'color' => 'nullable|string|max:7',
+                'orden' => 'nullable|integer|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Datos inválidos.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $tablero->update($request->only(['nombre', 'descripcion', 'color', 'orden']));
+            $tablero->load(['creador', 'tareas.asignado', 'tareas.creador']);
+
+            // Emitir evento WebSocket
+            broadcast(new TableroActualizado($tablero, $grupoId))->toOthers();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tablero actualizado exitosamente.',
+                'data' => $tablero
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error actualizando tablero: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar un tablero
+     */
+    public function destroy($grupoId, $tableroId)
+    {
+        try {
+            $user = Auth::user();
+            $grupo = Grupo::find($grupoId);
+
+            if (!$grupo) {
+                return response()->json(['success' => false, 'message' => 'Grupo no encontrado.'], 404);
+            }
+
+            // Verificar permisos (solo creador del grupo o creador del tablero)
+            if ($grupo->creado_por !== $user->id) {
+                $tablero = Tablero::where('id', $tableroId)
+                                 ->where('grupo_id', $grupoId)
+                                 ->first();
+                
+                if (!$tablero || $tablero->creado_por !== $user->id) {
+                    return response()->json(['success' => false, 'message' => 'No autorizado.'], 403);
+                }
+            } else {
+                $tablero = Tablero::where('id', $tableroId)
+                                 ->where('grupo_id', $grupoId)
+                                 ->first();
+            }
+
+            if (!$tablero) {
+                return response()->json(['success' => false, 'message' => 'Tablero no encontrado.'], 404);
+            }
+
+            // Eliminar todas las tareas asociadas
+            $tablero->tareas()->delete();
+            
+            // Eliminar el tablero
+            $tablero->delete();
+
+            // Emitir evento WebSocket
+            broadcast(new TableroEliminado($tableroId, $grupoId))->toOthers();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tablero eliminado exitosamente.'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error eliminando tablero: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
