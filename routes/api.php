@@ -18,6 +18,16 @@ use App\Http\Controllers\ReporteController;
 |--------------------------------------------------------------------------
 */
 
+// Ruta de salud para verificar que la API funciona
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now(),
+        'environment' => app()->environment(),
+        'version' => '1.0.0'
+    ]);
+});
+
 // Rutas públicas (no requieren autenticación)
 Route::post('/register', [UsuarioController::class, 'register']);
 Route::post('/login', [UsuarioController::class, 'login']);

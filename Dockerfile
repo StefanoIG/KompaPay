@@ -14,23 +14,20 @@ RUN apk add --no-cache \
 # Copiar la aplicación completa
 COPY . /var/www/html/
 
-# Copiar configuración personalizada de nginx
-COPY conf/nginx/nginx-site.conf /etc/nginx/sites-available/default.conf
-
 # Configuración de imagen
-ENV SKIP_COMPOSER 0
-ENV WEBROOT /var/www/html/public
-ENV PHP_ERRORS_STDERR 1
-ENV RUN_SCRIPTS 1
-ENV REAL_IP_HEADER 1
+ENV SKIP_COMPOSER=0
+ENV WEBROOT=/var/www/html/public
+ENV PHP_ERRORS_STDERR=1
+ENV RUN_SCRIPTS=1
+ENV REAL_IP_HEADER=1
 
 # Configuración de Laravel
-ENV APP_ENV production
-ENV APP_DEBUG false
-ENV LOG_CHANNEL stderr
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV LOG_CHANNEL=stderr
 
 # Permitir que composer funcione como root
-ENV COMPOSER_ALLOW_SUPERUSER 1
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Establecer directorio de trabajo
 WORKDIR /var/www/html
@@ -45,6 +42,10 @@ RUN chmod +x ./scripts/*.sh
 RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html && \
     chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Crear directorio para logs de nginx
+RUN mkdir -p /var/log/nginx && \
+    chown -R www-data:www-data /var/log/nginx
 
 # Exponer puerto
 EXPOSE 80
