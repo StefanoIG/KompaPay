@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\GastoController;
@@ -30,11 +31,56 @@ Route::get('/health', function () {
 
 // Ruta para verificar usuarios de prueba (temporal para debugging)
 Route::get('/debug/users', function () {
-    $users = \App\Models\User::select('id', 'nombre', 'email', 'created_at')->get();
-    return response()->json([
-        'total_users' => $users->count(),
-        'users' => $users
-    ]);
+    try {
+        $users = \App\Models\User::select('id', 'nombre', 'email', 'created_at')->get();
+        return response()->json([
+            'total_users' => $users->count(),
+            'users' => $users,
+            'database_status' => 'connected'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'database_status' => 'error'
+        ], 500);
+    }
+});
+
+// Ruta para verificar un login específico (temporal para debugging)
+Route::post('/debug/login', function (Request $request) {
+    try {
+        $email = $request->input('email');
+        $password = $request->input('password');
+        
+        $user = \App\Models\User::where('email', $email)->first();
+        
+        if (!$user) {
+            return response()->json([
+                'message' => 'Usuario no encontrado',
+                'email_buscado' => $email,
+                'usuarios_existentes' => \App\Models\User::pluck('email')
+            ], 404);
+        }
+        
+        $passwordCheck = Hash::check($password, $user->password);
+        
+        return response()->json([
+            'usuario_encontrado' => true,
+            'password_correcto' => $passwordCheck,
+            'user_data' => [
+                'id' => $user->id,
+                'nombre' => $user->nombre,
+                'email' => $user->email,
+                'password_hash' => $user->password
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
 });
 
 // Rutas públicas (no requieren autenticación)

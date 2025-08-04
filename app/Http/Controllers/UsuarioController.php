@@ -86,11 +86,19 @@ class UsuarioController extends Controller
                 ], 404);
             }
 
+            // Verificar contraseña manualmente primero
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Contraseña incorrecta'
+                ], 401);
+            }
+
             // Intentar autenticación
             if (!Auth::attempt($request->only('email', 'password'))) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Credenciales inválidas'
+                    'message' => 'Error en Auth::attempt'
                 ], 401);
             }
 
@@ -111,14 +119,15 @@ class UsuarioController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            // Log del error para debugging
-            Log::error('Error en login: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+            // MOSTRAR ERROR COMPLETO PARA DEBUGGING
             return response()->json([
                 'success' => false,
                 'message' => 'Error interno del servidor',
-                'error' => app()->environment('local') ? $e->getMessage() : 'Error interno'
+                'error_message' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+                'error_trace' => $e->getTraceAsString(),
+                'input_data' => $request->all()
             ], 500);
         }
     }
