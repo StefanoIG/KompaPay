@@ -28,6 +28,15 @@ Route::get('/health', function () {
     ]);
 });
 
+// Ruta para verificar usuarios de prueba (temporal para debugging)
+Route::get('/debug/users', function () {
+    $users = \App\Models\User::select('id', 'nombre', 'email', 'created_at')->get();
+    return response()->json([
+        'total_users' => $users->count(),
+        'users' => $users
+    ]);
+});
+
 // Rutas públicas (no requieren autenticación)
 Route::post('/register', [UsuarioController::class, 'register']);
 Route::post('/login', [UsuarioController::class, 'login']);

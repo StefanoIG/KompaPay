@@ -7,6 +7,7 @@ use App\Models\Grupo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -62,41 +63,64 @@ class UsuarioController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|string|email',
+                'password' => 'required|string',
+            ]);
 
-        if ($validator->fails()) {
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Datos de inicio de sesión inválidos',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Verificar si el usuario existe
+            $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no encontrado'
+                ], 404);
+            }
+
+            // Intentar autenticación
+            if (!Auth::attempt($request->only('email', 'password'))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Credenciales inválidas'
+                ], 401);
+            }
+
+            // Crear token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            // Actualizar la última sincronización
+            $user->ultima_sync = Carbon::now();
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inicio de sesión exitoso',
+                'data' => [
+                    'user' => $user,
+                    'token' => $token
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            // Log del error para debugging
+            Log::error('Error en login: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Datos de inicio de sesión inválidos',
-                'errors' => $validator->errors()
-            ], 422);
+                'message' => 'Error interno del servidor',
+                'error' => app()->environment('local') ? $e->getMessage() : 'Error interno'
+            ], 500);
         }
-
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Credenciales inválidas'
-            ], 401);
-        }
-
-        $user = User::where('email', $request->email)->firstOrFail();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // Actualizar la última sincronización
-        $user->ultima_sync = Carbon::now();
-        $user->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Inicio de sesión exitoso',
-            'data' => [
-                'user' => $user,
-                'token' => $token
-            ]
-        ], 200);
     }
 
     /**
